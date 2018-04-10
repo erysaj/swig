@@ -95,6 +95,8 @@ private:
 
   static SwigV8ReturnValue Print(const SwigV8Arguments &args);
 
+  static SwigV8ReturnValue Engine(const SwigV8Arguments &args);
+
   static SwigV8ReturnValue Require(const SwigV8Arguments &args);
 
   static SwigV8ReturnValue Quit(const SwigV8Arguments &args);
@@ -240,6 +242,8 @@ bool V8Shell::DisposeEngine() {
 }
 
 SwigV8Context V8Shell::CreateShellContext() {
+  v8::V8::SetFlagsFromString("--expose_gc", 11);
+
   // Create a template for the global object.
   v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
 
@@ -300,6 +304,11 @@ SwigV8ReturnValue V8Shell::Print(const SwigV8Arguments &args) {
   fflush(stdout);
 
   SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+SwigV8ReturnValue V8Shell::Engine(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  SWIGV8_RETURN(SWIGV8_STRING_NEW("v8"));
 }
 
 SwigV8ReturnValue V8Shell::Require(const SwigV8Arguments &args) {

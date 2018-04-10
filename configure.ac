@@ -1528,7 +1528,10 @@ else
   # check for JavaScriptCore/Webkit libraries
   AC_ARG_WITH(jscorelib,[  --with-jsclib=path      Set location of the JavaScriptCore/Webkit library directory],[JSCORELIB="-L$withval"], [JSCORELIB=])
 
-  if test -z "$JSCORELIB" -a -n "$PKGCONFIG"; then
+  if test -n "$JSCORELIB"; then
+    JSCOREDYNAMICLINKING="$JSCORELIB"
+    JSCENABLED=1
+  elif test -n "$PKGCONFIG"; then
     AC_MSG_CHECKING(for JavaScriptCore/Webkit library)
     if pkg-config javascriptcoregtk-1.0; then
       JSCORELIB=`$PKGCONFIG --libs javascriptcoregtk-1.0`
@@ -1542,6 +1545,23 @@ else
       JSCOREDYNAMICLINKING="$JSCORELIB"
       JSCENABLED=1
     fi
+  fi
+
+  if test ! -z "$JSCENABLED"; then
+    jsc_save_CFLAGS="$CFLAGS"
+    jsc_save_LDFLAGS="$LDFLAGS"
+    CFLAGS="$CFLAGS -I$JSCOREINCDIR"
+    LDFLAGS="$LDFLAGS $JSCORELIB -Wl,-no-undefined"
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+        #include <JavaScriptCore/JavaScript.h>
+        void JSSynchronousGarbageCollectForDebugging(JSContextRef);
+    ]], [[
+        JSContextRef context = JSGlobalContextCreate(NULL);
+        JSSynchronousGarbageCollectForDebugging(context);
+    ]])], [JSCGARBAGE=1], [JSCGARBAGE=0])
+    CFLAGS="$jsc_save_CFLAGS"
+    LDFLAGS="$jsc_save_LDFLAGS"
+    AC_SUBST(JSCGARBAGE)
   fi
 
   #----------------------------------------------------------------
